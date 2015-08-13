@@ -1,7 +1,18 @@
 // MW de autorización de accesos HTTP restringidos
 exports.loginRequired = function(req, res, next){
 	if (req.session.user) {
-		next();
+		currentdate= new Date();
+		currenttime = currentdate.getTime();
+		// console.log("hora actual:  " + currenttime);
+		// console.log("hora lttime: " + req.session.user.lttime);
+		elapsed = (currenttime - req.session.user.lttime) /1000  // en segundos
+		// console.log("tiempo entre transacion: " + elapsed);
+		if (elapsed <= 120) {
+			req.session.lttime = currenttime;
+			next();
+		}
+		else
+			res.redirect('/logout');
 	} else {
 		res.redirect('/login');
 	}
@@ -31,8 +42,11 @@ exports.create = function(req, res) {
 		}
 		
 		// Crear req.session.user y guardar campos id y username
-		// La sesión se define por la existencia de: req.session.user
-		req.session.user = {id:user.id, username:user.username};
+		// La sesión se define por la existencia de: req.session.user y la hora de creación
+		createdate = new Date();
+		createtime = createdate.getTime();
+		// console.log("Tiempo de creación de sesión: " + createtime);
+		req.session.user = {id:user.id, username:user.username, lttime: createtime};
 		
 		res.redirect(req.session.redir.toString()); // redirección a path anterior a login
 	});
